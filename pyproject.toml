@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "small-agent"
+version = "0.1.0"
+description = "Small agent"
+authors = ["andrei-gorbatch <gorbatch.andrei@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+python-dotenv = "^1.0.0"
+pandas = "^2.2.3"
+langgraph = "^0.2.64"
+langchain-core = "^0.3.30"
+langchain-openai = "^0.3.0"
+langchain-community = "^0.3.14"
+ipython = "^8.31.0"
+
+[tool.poetry.group.dev.dependencies]
+jupyter_black = "*"
+ipykernel = "*"
+jupyter = "*"
+matplotlib = "^3.6.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+black = "*"
+isort = "*"
+import-linter = "*"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
