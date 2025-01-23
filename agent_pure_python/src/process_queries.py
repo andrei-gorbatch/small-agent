@@ -1,5 +1,4 @@
-# File to process queries and return the results. 
-# Your entrypoint script should take a path to a text file with a task on every line, and should run your agent on the tasks in the file and write out the results.
+# File to process queries saved in tasks.txt file and write out the results. 
 
 import os
 import sys
