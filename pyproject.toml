@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "small-agent"
+name = "Agent"
 version = "0.1.0"
-description = "Small agent"
+description = "Agent"
 authors = ["andrei-gorbatch <gorbatch.andrei@gmail.com>"]
 readme = "README.md"
 
@@ -16,6 +16,8 @@ langchain-community = "^0.3.14"
 ipython = "^8.31.0"
 graphviz = "^0.20.3"
 pillow = "^11.1.0"
+bs4 = "^0.0.2"
+lxml = "^5.3.0"
 
 [tool.poetry.group.dev.dependencies]
 jupyter_black = "*"
