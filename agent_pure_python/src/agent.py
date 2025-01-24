@@ -2,9 +2,9 @@
 
 import re
 
-from openai import OpenAI
-from search import google_search, get_text_from_url
 from dotenv import load_dotenv
+from openai import OpenAI
+from search import get_text_from_url, google_search
 
 _ = load_dotenv()
 

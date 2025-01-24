@@ -5,6 +5,7 @@ import sys
 
 from agent import process_task
 
+
 def process_queries(file_path):
     with open(file_path, 'r') as file:
         tasks = file.readlines()

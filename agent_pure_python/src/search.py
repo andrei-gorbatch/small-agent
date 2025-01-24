@@ -1,11 +1,11 @@
 # This file contains search tools
 
-import requests
 import json
 import os
-
-from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup as bs
 
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
