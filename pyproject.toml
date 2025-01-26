@@ -18,6 +18,10 @@ graphviz = "^0.20.3"
 pillow = "^11.1.0"
 bs4 = "^0.0.2"
 lxml = "^5.3.0"
+langgraph-checkpoint-sqlite = "^2.0.3"
+tavily-python = "^0.5.0"
+aiosqlite = "^0.20.0"
+gradio = "^5.13.1"
 
 [tool.poetry.group.dev.dependencies]
 jupyter_black = "*"

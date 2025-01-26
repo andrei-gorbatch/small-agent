@@ -2,7 +2,9 @@
 
 import os
 import sys
+
 import requests
+
 
 def execute_python_code(code):
     try:
@@ -10,10 +12,11 @@ def execute_python_code(code):
     except Exception as e:
         return "There is an error in the code, try again: " + str(e)
 
+
 # function to download a csv from a url and save it to a file
 def download_csv_from_url(url):
     filename = "data.csv"
     response = requests.get(url)
-    with open(filename, 'wb') as f:
+    with open(filename, "wb") as f:
         f.write(response.content)
     return f"Downloaded file from {url} and saved it to {filename}"
