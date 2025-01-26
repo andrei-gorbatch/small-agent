@@ -21,6 +21,13 @@ from langchain_core.messages import (
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
+from prompts import (
+    PLAN_PROMPT,
+    REFLECTION_PROMPT,
+    RESEARCH_CRITIQUE_PROMPT,
+    RESEARCH_PLAN_PROMPT,
+    WRITER_PROMPT,
+)
 from pydantic import BaseModel
 from tavily import TavilyClient
 
@@ -50,36 +57,11 @@ class ewriter:
         self.tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
         # Define the prompts
-        self.PLAN_PROMPT = (
-            "You are an expert writer tasked with writing a high level outline of a short 3 paragraph essay. "
-            "Write such an outline for the user provided topic. Give the three main headers of an outline of "
-            "the essay along with any relevant notes or instructions for the sections. "
-        )
-        self.WRITER_PROMPT = (
-            "You are an essay assistant tasked with writing excellent 3 paragraph essays. "
-            "Generate the best essay possible for the user's request and the initial outline. "
-            "If the user provides critique, respond with a revised version of your previous attempts. "
-            "Utilize all the information below as needed: \n"
-            "------\n"
-            "{content}"
-        )
-        self.RESEARCH_PLAN_PROMPT = (
-            "You are a researcher charged with providing information that can "
-            "be used when writing the following essay. Generate a list of search "
-            "queries that will gather "
-            "any relevant information. Only generate 3 queries max."
-        )
-        self.REFLECTION_PROMPT = (
-            "You are a teacher grading an 3 paragraph essay submission. "
-            "Generate critique and recommendations for the user's submission. "
-            "Provide detailed recommendations, including requests for length, depth, style, etc."
-        )
-        self.RESEARCH_CRITIQUE_PROMPT = (
-            "You are a researcher charged with providing information that can "
-            "be used when making any requested revisions (as outlined below). "
-            "Generate a list of search queries that will gather any relevant information. "
-            "Only generate 2 queries max."
-        )
+        self.PLAN_PROMPT = PLAN_PROMPT
+        self.WRITER_PROMPT = WRITER_PROMPT
+        self.RESEARCH_PLAN_PROMPT = RESEARCH_PLAN_PROMPT
+        self.REFLECTION_PROMPT = REFLECTION_PROMPT
+        self.RESEARCH_CRITIQUE_PROMPT = RESEARCH_CRITIQUE_PROMPT
 
         # Create the graph
         # Nodes
