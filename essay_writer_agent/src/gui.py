@@ -1,4 +1,4 @@
-''' This is the GUI for the agent. It is a Gradio interface that allows the user to interact with the agent in human in the loop fashion.'''
+""" This is the GUI for the agent. It is a Gradio interface that allows the user to interact with the agent in human in the loop fashion."""
 
 import warnings
 
@@ -12,7 +12,7 @@ import os
 import gradio as gr
 
 
-class writer_gui( ):
+class writer_gui:
     def __init__(self, graph, share=False):
         self.graph = graph
         self.share = share
@@ -25,13 +25,24 @@ class writer_gui( ):
         self.thread = {"configurable": {"thread_id": str(self.thread_id)}}
         self.demo = self.create_interface()
 
-    def run_agent(self, start,topic,stop_after):
-        ''' run the agent. If start is True, this is a new agent. If start is False, this is a continuation of an existing agent. '''
+    def run_agent(self, start, topic, stop_after):
+        """run the agent. If start is True, this is a new agent. If start is False, this is a continuation of an existing agent."""
         if start:
             self.iterations.append(0)
-            config = {'task': topic,"max_revisions": 2,"revision_number": 0,
-                      'lnode': "", 'planner': "no plan", 'draft': "no draft", 'critique': "no critique", 
-                      'content': ["no content",], 'queries': "no queries", 'count':0}
+            config = {
+                "task": topic,
+                "max_revisions": 2,
+                "revision_number": 0,
+                "lnode": "",
+                "planner": "no plan",
+                "draft": "no draft",
+                "critique": "no critique",
+                "content": [
+                    "no content",
+                ],
+                "queries": "no queries",
+                "count": 0,
+            }
             self.thread_id += 1  # new agent, new thread
             self.threads.append(self.thread_id)
         else:
@@ -43,173 +54,208 @@ class writer_gui( ):
             self.partial_message += str(self.response)
             self.partial_message += f"\n------------------\n\n"
 
-            lnode,nnode,_,rev,acount = self.get_disp_state()
-            yield self.partial_message,lnode,nnode,self.thread_id,rev,acount
-            config = None #need
-            #print(f"run_agent:{lnode}")
-            if not nnode:  
-                #print("Hit the end")
+            lnode, nnode, _, rev, acount = self.get_disp_state()
+            yield self.partial_message, lnode, nnode, self.thread_id, rev, acount
+            config = None  # need
+            # print(f"run_agent:{lnode}")
+            if not nnode:
+                # print("Hit the end")
                 return
             if lnode in stop_after:
-                #print(f"stopping due to stop_after {lnode}")
+                # print(f"stopping due to stop_after {lnode}")
                 return
             else:
-                #print(f"Not stopping on lnode {lnode}")
+                # print(f"Not stopping on lnode {lnode}")
                 pass
         return
-    
-    def get_disp_state(self,):
+
+    def get_disp_state(
+        self,
+    ):
         current_state = self.graph.get_state(self.thread)
         lnode = current_state.values["lnode"]
         acount = current_state.values["count"]
         rev = current_state.values["revision_number"]
         nnode = current_state.next
 
-        return lnode,nnode,self.thread_id,rev,acount
-    
-    def get_state(self,key):
+        return lnode, nnode, self.thread_id, rev, acount
+
+    def get_state(self, key):
         current_values = self.graph.get_state(self.thread)
         if key in current_values.values:
-            lnode,nnode,self.thread_id,rev,astep = self.get_disp_state()
+            lnode, nnode, self.thread_id, rev, astep = self.get_disp_state()
             new_label = f"last_node: {lnode}, thread_id: {self.thread_id}, rev: {rev}, step: {astep}"
             return gr.update(label=new_label, value=current_values.values[key])
         else:
-            return ""  
-    
-    def get_content(self,):
+            return ""
+
+    def get_content(
+        self,
+    ):
         current_values = self.graph.get_state(self.thread)
         if "content" in current_values.values:
             content = current_values.values["content"]
-            lnode,nnode,thread_id,rev,astep = self.get_disp_state()
+            lnode, nnode, thread_id, rev, astep = self.get_disp_state()
             new_label = f"last_node: {lnode}, thread_id: {self.thread_id}, rev: {rev}, step: {astep}"
-            return gr.update(label=new_label, value="\n\n".join(item for item in content) + "\n\n")
+            return gr.update(
+                label=new_label, value="\n\n".join(item for item in content) + "\n\n"
+            )
         else:
-            return ""  
-    
-    def update_hist_pd(self,):
-        ''' update the state pulldown '''
+            return ""
+
+    def update_hist_pd(
+        self,
+    ):
+        """update the state pulldown"""
         hist = []
         # this generator returns the latest first
         for state in self.graph.get_state_history(self.thread):
-            if state.metadata['step'] < 1:
+            if state.metadata["step"] < 1:
                 continue
-            checkpoint_id = state.config['configurable']['checkpoint_id']
-            tid = state.config['configurable']['thread_id']
-            count = state.values['count']
-            lnode = state.values['lnode']
-            rev = state.values['revision_number']
+            checkpoint_id = state.config["configurable"]["checkpoint_id"]
+            tid = state.config["configurable"]["thread_id"]
+            count = state.values["count"]
+            lnode = state.values["lnode"]
+            rev = state.values["revision_number"]
             nnode = state.next
             st = f"{tid}:{count}:{lnode}:{nnode}:{rev}:{checkpoint_id}"
             hist.append(st)
-        return gr.Dropdown(label="update_state from: thread:count:last_node:next_node:rev:checkpoint_id", 
-                           choices=hist, value=hist[0],interactive=True)
-    
-    def find_config(self,checkpoint_id):
-        ''' find the config for a given checkpoint_id '''
+        return gr.Dropdown(
+            label="update_state from: thread:count:last_node:next_node:rev:checkpoint_id",
+            choices=hist,
+            value=hist[0],
+            interactive=True,
+        )
+
+    def find_config(self, checkpoint_id):
+        """find the config for a given checkpoint_id"""
         for state in self.graph.get_state_history(self.thread):
             config = state.config
-            if config['configurable']['checkpoint_id'] == checkpoint_id:
+            if config["configurable"]["checkpoint_id"] == checkpoint_id:
                 return config
-        return(None)
-            
-    def copy_state(self,hist_str):
-        ''' result of selecting an old state from the step pulldown. Note does not change thread. 
-             This copies an old state to a new current state. 
-        '''
-        checkpoint_id = hist_str.split(":")[-1]
+        return None
 
+    def copy_state(self, hist_str):
+        """result of selecting an old state from the step pulldown. Note does not change thread.
+        This copies an old state to a new current state.
+        """
+        checkpoint_id = hist_str.split(":")[-1]
 
         config = self.find_config(checkpoint_id)
         state = self.graph.get_state(config)
-        self.graph.update_state(self.thread, state.values, as_node=state.values['lnode'])
-        new_state = self.graph.get_state(self.thread)  #should now match
-        new_checkpoint_id = new_state.config['configurable']['checkpoint_id']
-        tid = new_state.config['configurable']['thread_id']
-        count = new_state.values['count']
-        lnode = new_state.values['lnode']
-        rev = new_state.values['revision_number']
+        self.graph.update_state(
+            self.thread, state.values, as_node=state.values["lnode"]
+        )
+        new_state = self.graph.get_state(self.thread)  # should now match
+        new_checkpoint_id = new_state.config["configurable"]["checkpoint_id"]
+        tid = new_state.config["configurable"]["thread_id"]
+        count = new_state.values["count"]
+        lnode = new_state.values["lnode"]
+        rev = new_state.values["revision_number"]
         nnode = new_state.next
-        return lnode,nnode,new_checkpoint_id,rev,count
-    
-    def update_thread_pd(self,):
-        ''' update the thread pulldown '''
-        return gr.Dropdown(label="choose thread", choices=self.threads, value=self.thread_id,interactive=True)
-    
-    def switch_thread(self,new_thread_id):
-        ''' switch to a new thread. This will create a new 'current state' node. '''
+        return lnode, nnode, new_checkpoint_id, rev, count
+
+    def update_thread_pd(
+        self,
+    ):
+        """update the thread pulldown"""
+        return gr.Dropdown(
+            label="choose thread",
+            choices=self.threads,
+            value=self.thread_id,
+            interactive=True,
+        )
+
+    def switch_thread(self, new_thread_id):
+        """switch to a new thread. This will create a new 'current state' node."""
         self.thread = {"configurable": {"thread_id": str(new_thread_id)}}
         self.thread_id = new_thread_id
-        return 
-    
-    def modify_state(self,key,asnode,new_state):
-        ''' gets the current state, modifes a single value in the state identified by key, and updates state with it.
-        note that this will create a new 'current state' node. If you do this multiple times with different keys, it will create
-        one for each update. Note also that it doesn't resume after the update
-        '''
-        current_values = self.graph.get_state(self.thread)
-        current_values.values[key] = new_state
-        self.graph.update_state(self.thread, current_values.values,as_node=asnode)
         return
 
+    def modify_state(self, key, asnode, new_state):
+        """gets the current state, modifes a single value in the state identified by key, and updates state with it.
+        note that this will create a new 'current state' node. If you do this multiple times with different keys, it will create
+        one for each update. Note also that it doesn't resume after the update
+        """
+        current_values = self.graph.get_state(self.thread)
+        current_values.values[key] = new_state
+        self.graph.update_state(self.thread, current_values.values, as_node=asnode)
+        return
 
     def create_interface(self):
-        with gr.Blocks(theme=gr.themes.Default(spacing_size='sm',text_size="sm")) as demo:
-            
+        with gr.Blocks(
+            theme=gr.themes.Default(spacing_size="sm", text_size="sm")
+        ) as demo:
+
             def updt_disp():
-                ''' general update display on state change '''
+                """general update display on state change"""
                 current_state = self.graph.get_state(self.thread)
                 hist = []
                 # curiously, this generator returns the latest first
                 for state in self.graph.get_state_history(self.thread):
-                    if state.metadata['step'] < 1:  #ignore early states
+                    if state.metadata["step"] < 1:  # ignore early states
                         continue
-                    s_checkpoint_id = state.config['configurable']['checkpoint_id']
+                    s_checkpoint_id = state.config["configurable"]["checkpoint_id"]
 
-                    s_tid = state.config['configurable']['thread_id']
-                    s_count = state.values['count']
-                    s_lnode = state.values['lnode']
-                    s_rev = state.values['revision_number']
+                    s_tid = state.config["configurable"]["thread_id"]
+                    s_count = state.values["count"]
+                    s_lnode = state.values["lnode"]
+                    s_rev = state.values["revision_number"]
                     s_nnode = state.next
                     st = f"{s_tid}:{s_count}:{s_lnode}:{s_nnode}:{s_rev}:{s_checkpoint_id}"
 
                     hist.append(st)
-                if not current_state.metadata: #handle init call
-                    return{}
+                if not current_state.metadata:  # handle init call
+                    return {}
                 else:
                     return {
-                        topic_bx : current_state.values["task"],
-                        lnode_bx : current_state.values["lnode"],
-                        count_bx : current_state.values["count"],
-                        revision_bx : current_state.values["revision_number"],
-                        nnode_bx : current_state.next,
-                        threadid_bx : self.thread_id,
-                        thread_pd : gr.Dropdown(label="choose thread", choices=self.threads, value=self.thread_id,interactive=True),
-                        step_pd : gr.Dropdown(label="update_state from: thread:count:last_node:next_node:rev:checkpoint_id", 
-                               choices=hist, value=hist[0],interactive=True),
+                        topic_bx: current_state.values["task"],
+                        lnode_bx: current_state.values["lnode"],
+                        count_bx: current_state.values["count"],
+                        revision_bx: current_state.values["revision_number"],
+                        nnode_bx: current_state.next,
+                        threadid_bx: self.thread_id,
+                        thread_pd: gr.Dropdown(
+                            label="choose thread",
+                            choices=self.threads,
+                            value=self.thread_id,
+                            interactive=True,
+                        ),
+                        step_pd: gr.Dropdown(
+                            label="update_state from: thread:count:last_node:next_node:rev:checkpoint_id",
+                            choices=hist,
+                            value=hist[0],
+                            interactive=True,
+                        ),
                     }
+
             def get_snapshots():
                 new_label = f"thread_id: {self.thread_id}, Summary of snapshots"
                 sstate = ""
                 for state in self.graph.get_state_history(self.thread):
-                    for key in ['plan', 'draft', 'critique']:
+                    for key in ["plan", "draft", "critique"]:
                         if key in state.values:
                             state.values[key] = state.values[key][:80] + "..."
-                    if 'content' in state.values:
-                        for i in range(len(state.values['content'])):
-                            state.values['content'][i] = state.values['content'][i][:20] + '...'
-                    if 'writes' in state.metadata:
-                        state.metadata['writes'] = "not shown"
+                    if "content" in state.values:
+                        for i in range(len(state.values["content"])):
+                            state.values["content"][i] = (
+                                state.values["content"][i][:20] + "..."
+                            )
+                    if "writes" in state.metadata:
+                        state.metadata["writes"] = "not shown"
                     sstate += str(state) + "\n\n"
                 return gr.update(label=new_label, value=sstate)
 
             def vary_btn(stat):
-                return(gr.update(variant=stat))
-            
+                return gr.update(variant=stat)
+
             with gr.Tab("Agent"):
                 with gr.Row():
                     topic_bx = gr.Textbox(label="Essay Topic", value="Pizza Shop")
-                    gen_btn = gr.Button("Generate Essay", scale=0,min_width=80, variant='primary')
-                    cont_btn = gr.Button("Continue Essay", scale=0,min_width=80)
+                    gen_btn = gr.Button(
+                        "Generate Essay", scale=0, min_width=80, variant="primary"
+                    )
+                    cont_btn = gr.Button("Continue Essay", scale=0, min_width=80)
                 with gr.Row():
                     lnode_bx = gr.Textbox(label="last node", min_width=100)
                     nnode_bx = gr.Textbox(label="next node", min_width=100)
@@ -218,39 +264,93 @@ class writer_gui( ):
                     count_bx = gr.Textbox(label="count", scale=0, min_width=80)
                 with gr.Accordion("Manage Agent", open=False):
                     checks = list(self.graph.nodes.keys())
-                    checks.remove('__start__')
-                    stop_after = gr.CheckboxGroup(checks,label="Interrupt After State", value=checks, scale=0, min_width=400)
+                    checks.remove("__start__")
+                    stop_after = gr.CheckboxGroup(
+                        checks,
+                        label="Interrupt After State",
+                        value=checks,
+                        scale=0,
+                        min_width=400,
+                    )
                     with gr.Row():
-                        thread_pd = gr.Dropdown(choices=self.threads,interactive=True, label="select thread", min_width=120, scale=0)
-                        step_pd = gr.Dropdown(choices=['N/A'],interactive=True, label="select step", min_width=160, scale=1)
+                        thread_pd = gr.Dropdown(
+                            choices=self.threads,
+                            interactive=True,
+                            label="select thread",
+                            min_width=120,
+                            scale=0,
+                        )
+                        step_pd = gr.Dropdown(
+                            choices=["N/A"],
+                            interactive=True,
+                            label="select step",
+                            min_width=160,
+                            scale=1,
+                        )
                 live = gr.Textbox(label="Live Agent Output", lines=5, max_lines=5)
-        
+
                 # actions
-                sdisps =[topic_bx,lnode_bx,nnode_bx,threadid_bx,revision_bx,count_bx,step_pd,thread_pd]
+                sdisps = [
+                    topic_bx,
+                    lnode_bx,
+                    nnode_bx,
+                    threadid_bx,
+                    revision_bx,
+                    count_bx,
+                    step_pd,
+                    thread_pd,
+                ]
                 thread_pd.input(self.switch_thread, [thread_pd], None).then(
-                                fn=updt_disp, inputs=None, outputs=sdisps)
-                step_pd.input(self.copy_state,[step_pd],None).then(
-                              fn=updt_disp, inputs=None, outputs=sdisps)
-                gen_btn.click(vary_btn,gr.Number("secondary", visible=False), gen_btn).then(
-                              fn=self.run_agent, inputs=[gr.Number(True, visible=False),topic_bx,stop_after], outputs=[live],show_progress=True).then(
-                              fn=updt_disp, inputs=None, outputs=sdisps).then( 
-                              vary_btn,gr.Number("primary", visible=False), gen_btn).then(
-                              vary_btn,gr.Number("primary", visible=False), cont_btn)
-                cont_btn.click(vary_btn,gr.Number("secondary", visible=False), cont_btn).then(
-                               fn=self.run_agent, inputs=[gr.Number(False, visible=False),topic_bx,stop_after], 
-                               outputs=[live]).then(
-                               fn=updt_disp, inputs=None, outputs=sdisps).then(
-                               vary_btn,gr.Number("primary", visible=False), cont_btn)
-        
+                    fn=updt_disp, inputs=None, outputs=sdisps
+                )
+                step_pd.input(self.copy_state, [step_pd], None).then(
+                    fn=updt_disp, inputs=None, outputs=sdisps
+                )
+                gen_btn.click(
+                    vary_btn, gr.Number("secondary", visible=False), gen_btn
+                ).then(
+                    fn=self.run_agent,
+                    inputs=[gr.Number(True, visible=False), topic_bx, stop_after],
+                    outputs=[live],
+                    show_progress=True,
+                ).then(
+                    fn=updt_disp, inputs=None, outputs=sdisps
+                ).then(
+                    vary_btn, gr.Number("primary", visible=False), gen_btn
+                ).then(
+                    vary_btn, gr.Number("primary", visible=False), cont_btn
+                )
+                cont_btn.click(
+                    vary_btn, gr.Number("secondary", visible=False), cont_btn
+                ).then(
+                    fn=self.run_agent,
+                    inputs=[gr.Number(False, visible=False), topic_bx, stop_after],
+                    outputs=[live],
+                ).then(
+                    fn=updt_disp, inputs=None, outputs=sdisps
+                ).then(
+                    vary_btn, gr.Number("primary", visible=False), cont_btn
+                )
+
             with gr.Tab("Plan"):
                 with gr.Row():
                     refresh_btn = gr.Button("Refresh")
                     modify_btn = gr.Button("Modify")
                 plan = gr.Textbox(label="Plan", lines=10, interactive=True)
-                refresh_btn.click(fn=self.get_state, inputs=gr.Number("plan", visible=False), outputs=plan)
-                modify_btn.click(fn=self.modify_state, inputs=[gr.Number("plan", visible=False),
-                                                          gr.Number("planner", visible=False), plan],outputs=None).then(
-                                 fn=updt_disp, inputs=None, outputs=sdisps)
+                refresh_btn.click(
+                    fn=self.get_state,
+                    inputs=gr.Number("plan", visible=False),
+                    outputs=plan,
+                )
+                modify_btn.click(
+                    fn=self.modify_state,
+                    inputs=[
+                        gr.Number("plan", visible=False),
+                        gr.Number("planner", visible=False),
+                        plan,
+                    ],
+                    outputs=None,
+                ).then(fn=updt_disp, inputs=None, outputs=sdisps)
             with gr.Tab("Research Content"):
                 refresh_btn = gr.Button("Refresh")
                 content_bx = gr.Textbox(label="content", lines=10)
@@ -260,20 +360,39 @@ class writer_gui( ):
                     refresh_btn = gr.Button("Refresh")
                     modify_btn = gr.Button("Modify")
                 draft_bx = gr.Textbox(label="draft", lines=10, interactive=True)
-                refresh_btn.click(fn=self.get_state, inputs=gr.Number("draft", visible=False), outputs=draft_bx)
-                modify_btn.click(fn=self.modify_state, inputs=[gr.Number("draft", visible=False),
-                                                          gr.Number("generate", visible=False), draft_bx], outputs=None).then(
-                                fn=updt_disp, inputs=None, outputs=sdisps)
+                refresh_btn.click(
+                    fn=self.get_state,
+                    inputs=gr.Number("draft", visible=False),
+                    outputs=draft_bx,
+                )
+                modify_btn.click(
+                    fn=self.modify_state,
+                    inputs=[
+                        gr.Number("draft", visible=False),
+                        gr.Number("generate", visible=False),
+                        draft_bx,
+                    ],
+                    outputs=None,
+                ).then(fn=updt_disp, inputs=None, outputs=sdisps)
             with gr.Tab("Critique"):
                 with gr.Row():
                     refresh_btn = gr.Button("Refresh")
                     modify_btn = gr.Button("Modify")
                 critique_bx = gr.Textbox(label="Critique", lines=10, interactive=True)
-                refresh_btn.click(fn=self.get_state, inputs=gr.Number("critique", visible=False), outputs=critique_bx)
-                modify_btn.click(fn=self.modify_state, inputs=[gr.Number("critique", visible=False),
-                                                          gr.Number("reflect", visible=False), 
-                                                          critique_bx], outputs=None).then(
-                                fn=updt_disp, inputs=None, outputs=sdisps)
+                refresh_btn.click(
+                    fn=self.get_state,
+                    inputs=gr.Number("critique", visible=False),
+                    outputs=critique_bx,
+                )
+                modify_btn.click(
+                    fn=self.modify_state,
+                    inputs=[
+                        gr.Number("critique", visible=False),
+                        gr.Number("reflect", visible=False),
+                        critique_bx,
+                    ],
+                    outputs=None,
+                ).then(fn=updt_disp, inputs=None, outputs=sdisps)
             with gr.Tab("StateSnapShots"):
                 with gr.Row():
                     refresh_btn = gr.Button("Refresh")

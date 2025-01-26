@@ -92,6 +92,7 @@ Answer: Shell plc is the only UK company with a revenue over 1 billion pounds in
 
 """.strip()
 
+
 # Define simple Agent class
 class Agent:
     def __init__(self, system=""):
@@ -111,12 +112,13 @@ class Agent:
             model="gpt-4o", temperature=0, messages=self.messages
         )
         return completion.choices[0].message.content
-    
+
 
 abot = Agent(prompt)
 action_re = re.compile(
     "^Action: (\w+): (.*)$"
 )  # python regular expression to select action
+
 
 def process_task(question, max_turns=10):
     i = 0
