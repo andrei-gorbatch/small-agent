@@ -17,7 +17,7 @@ Contains an agent that writes an essay about a given topic in a few steps:
 
 At any stage, human-in-the-loop interaction is possible: after each step, the agent can be interrupted, and any output updated. Several different conversations are possible by using different threads.
 
-A GUI is provided to easily interact with the agent.
+A GUI (gradio app) is provided to easily interact with the agent.
 
 #### Launch Instructions
 
