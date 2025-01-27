@@ -26,3 +26,18 @@ To launch, follow these steps:
 1. Add a `.env` file with the required API keys.
 2. Install the Poetry environment.
 3. Run the GUI from `use_gui.ipynb` or `use_gui.py`.
+
+### company_research_tool
+Contains an agent that processes a list of companies to extract relevant information such as industry, location, number of employees, and a short description. The agent performs the following steps:
+1. Create a research plan.
+2. Do an internet search according to the plan.
+3. Extract and compile the information in a csv.
+
+#### Launch Instructions
+
+To launch, follow these steps:
+
+1. Add a `.env` file with the required API keys.
+2. Install the Poetry environment.
+3. Add a companies.csv file with a list of companies, header: Company Name.
+4. Run the script from `research_agent.py` or `research_agent.ipynb`.
