@@ -1,14 +1,18 @@
 # Small Agent
 
-This repository contains several small agents.
+This repository contains several small agents:
+1. agent_pure_python - A basic search agent using pure Python (no extra frameworks).
+2. essay_writer_agent - LangGraph REACT agent that writes an essay about a given topic using web search. Gradio GUI is included.
+3. company_research_tool - LangGraph agent that processes a list of companies to find relevant information such as industry and location, and saves it in a csv. 
 
 ## Agents
 
 ### agent_pure_python
-Builds a basic search agent using pure Python (no extra frameworks).
+A basic search agent using pure Python (no extra frameworks).
 
 ### essay_writer_agent
 Contains an agent that writes an essay about a given topic in a few steps:
+
 1. Create a research plan.
 2. Do an internet search according to the plan.
 3. Write a draft.
